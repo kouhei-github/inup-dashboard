@@ -80,3 +80,4 @@ fabric.properties
 .env
 /container/db/*
 express/.env
+express/node_modules
