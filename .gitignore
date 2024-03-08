@@ -81,3 +81,4 @@ fabric.properties
 /container/db/*
 express/.env
 express/node_modules
+.idea
