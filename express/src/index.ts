@@ -5,8 +5,8 @@ import * as http from 'http'
 import compression from 'compression'
 import cookieParser from 'cookie-parser'
 import bodyParser from 'body-parser'
-import router from './router'
 import mySequelize from './db'
+import {injection} from './di'
 // データベースに接続
 
 const app = express()
@@ -17,8 +17,11 @@ app.use(cors({
 app.use(compression())
 app.use(cookieParser())
 app.use(bodyParser.json())
-app.use("/api/", router())
 
+// Dependency Injection
+const router = injection()
+
+app.use("/api/", router.register())
 
 const server = http.createServer(app)
 
