@@ -1,27 +1,50 @@
 import {Request, Response} from 'express'
-import {createUser, findAllUser, findUserByEmail} from '../repositories/User'
-import {authentication, random} from '../service/secret/authenticate'
+import {IUserService} from '../service/userService'
+import {ISecurityService} from '../service/SecurityService'
+import {User} from '../models/User'
 
-export const saveUserHandler = async (req: Request, res: Response) => {
-  const {email, password} = req.body as {email: string, password: string}
 
-  const exist = await findUserByEmail(email)
+export interface IUserController {
+  getUsers(req: Request, res: Response): Promise<void>
+  saveUser(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>
+}
 
-  if (exist !== null){
-    return res.status(409).json({ message: "User already exists" });
+export class UserController implements IUserController {
+  constructor(private userService: IUserService, private securityService: ISecurityService) {
   }
 
-  const salt = random()
+  async saveUser(req: Request, res: Response): Promise<Response<any, Record<string, any>> | undefined>
+  {
+    const {email, password} = req.body as {email: string, password: string}
+    let exist: User | null
+    try {
+      exist = await this.userService.findUserByEmail(email)
+    } catch (e) {
+      console.log(e)
+      return res.status(409).json({ message: "UserRepository already exists" });
+    }
 
-  const user = await createUser({
-    email,
-    salt,
-    password: authentication(salt, password),
-  })
-  res.json(user);
-};
+    if (exist !== null){
+      return res.status(409).json({ message: "UserRepository already exists" });
+    }
 
-export const usersHandler = async (req: Request, res: Response) => {
-  const user = await findAllUser()
-  res.json(user);
-};
+    // パスワードのソルト
+    const salt = this.securityService.random()
+    const hashPassword = this.securityService.authentication(salt, password)
+
+    // 保存
+    const user = await this.userService.createUser(email, hashPassword, salt)
+    res.json(user);
+  }
+
+  async getUsers(req: Request, res: Response)
+  {
+    const users = await this.userService.findAll()
+    res.json(users)
+  }
+
+  static builder(userService: IUserService, securityService: ISecurityService)
+  {
+    return new this(userService, securityService)
+  }
+}
