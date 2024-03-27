@@ -24,8 +24,6 @@ const server = http.createServer(app)
 
 mySequelize.sync().then(() => {
   server.listen(8000, () => {
-    console.log("Server running")
+    console.log("Server running!")
   })
 })
-
-
